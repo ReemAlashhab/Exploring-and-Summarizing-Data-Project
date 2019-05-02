@@ -1,0 +1,1503 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+Exploring Loan Data from Prosper by Reem Alashhab
+========================================================
+
+#Introduction 
+
+In this project, I will use the R and apply exploratory data anlaysis techniques in a selected dataset,
+Prosper Loan Data, to discover relationships among multiple variables, and create explanatory visualizations illuminating distributions, outliers, and anomalies.
+
+
+#What is Prosper ?
+
+Prosper is the first peer-to-peer lending marketplace in the US, San Francisco. It was founded on 2005. Till now, prosper has helped more than $770,000 people with more than $12 billion loans. Prosper facilitates the borrowing and investing processes for both individuals and instituations. Borrowers can apply for a fixed-rate and fixed-term loan in the range of $20,000 and $40,000. On the other hand, institutions and individuals are offered attractive returns when they invest in loans. 
+
+
+#The variables defintions:
+
+1. **Loan Status:** The current status of the loan: Cancelled,  Chargedoff, Completed, Current, Defaulted, FinalPaymentInProgress, PastDue. The PastDue status will be accompanied by a delinquency bucket.
+
+2. **Borrower Rate:** The Borrower's interest rate for the loan. 
+
+3. **Lender Yield:** The Lender yield on the loan. Lender yield is equal to the interest rate on the loan less the servicing fee.
+
+4. **Estimated Return:** The estimated return assigned to the listing at the time it was created. Estimated return is the difference between the Estimated Effective Yield(Effective yield is equal to the borrower interest rate (i) minus the servicing fee rate, (ii) minus estimated uncollected interest on charge-offs, (iii) plus estimated collected late fees.  Applicable for loans originated after July 2009) and the Estimated Loss Rate(Estimated loss is the estimated principal loss on charge-offs. Applicable for loans originated after July 2009).
+
+5. **Prosper Rating (Alpha):** The Prosper Rating assigned at the time the listing was created between AA - HR.  Applicable for loans originated after July 2009.It is the estimated avg. Annual loss rate of the loan. 
+
+6. **Listing Category:** The category of the listing that the borrower selected when posting their listing: 0 - Not Available, 1 - Debt Consolidation, 2 - Home Improvement, 3 - Business, 4 - Personal Loan, 5 - Student Use, 6 - Auto, 7- Other, 8 - Baby&Adoption, 9 - Boat, 10 - Cosmetic Procedure, 11 - Engagement Ring, 12 - Green Loans, 13 - Household Expenses, 14 - Large Purchases, 15 - Medical/Dental, 16 - Motorcycle, 17 - RV, 18 - Taxes, 19 - Vacation, 20 - Wedding Loans.
+
+7. **Borrower State:** The two letter abbreviation of the state of the address of the borrower at the time the Listing was created.
+
+8. **Occupation:** The Occupation selected by the Borrower at the time they created the listing.
+
+9. **Income Range:** The income range of the borrower at the time the listing was created.
+
+10. **Stated Monthly Income:** The monthly income the borrower stated at the time the listing was created.
+
+11. **Loan Original Amount:** The origination amount of the loan.
+
+12. **Term:** The length of the loan expressed in months.
+
+13. **Employment Status:** The employment status of the borrower at the time they posted the listing.
+
+14. **Credit Score Range Lower:** The lower value representing the range of the borrower's credit score as provided by a consumer credit rating agency.
+
+15. **Monthly Loan Payment:** The scheduled monthly loan payment.
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#loading the needed libraries for the data exploration
+library("ggplot2")
+library("RColorBrewer")
+library("plyr")
+library("dplyr")
+
+
+
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# reading the data file and assign it to the varibale (pf)
+pf <- read.csv('C:/Users/hp/Desktop/Data Analaysis for Enterprise/My projects/Explore and Summarize Data/prosperLoanData.csv', na.strings=c("", "NA"))
+
+```
+
+
+# Univariate Plots Section
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#displaying the number of entries (rows) in the data set and the number of variables (columns)
+
+dim(pf)
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+str(pf)
+
+```
+
+**Observation:** 
+
+The Prosper Loan Data set contains 113,937 observations and 81 varibales.
+
+Each variable was explained above showing its type and holding values.
+
+**Note:** The data analyst will select only specific varibales to study which were stated in the variables defintion section above.  
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+summary(pf)
+
+```
+
+
+
+**Observation:** The summary table above is displaying some information regarding the measures of center (mean, first quartile, median, third quartile, max and min) for each numirical variable. For the non-numrical variables, the sum count for each category is computed. 
+
+In the following graphs, each graph will include an observation accompined with several questions to investigate. However, not all questions will be answered in this study, but some of them. 
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ ggplot(pf, aes(LoanStatus)) + 
+  geom_bar()+
+  geom_text(stat='count', 
+            aes(label = ..count..), 
+            vjust = -0.5, size = 3, color= "red")+
+  theme(axis.text.x = element_text(angle = 70, hjust = 1))
+
+```
+
+
+
+**Observation:** 
+The general observation from the above plot is that completed loans are more than defaulted loans, charged off and past due loans. However, there are still many current loans.
+
+
+**Two questions come here :**
+
+* Does the loan term affect the payment of the loan ?
+
+* Do people with a higher salary range tend to complete their loan payments
+than poeple with lower salary range ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(pf, aes( x = Term / 12))+ 
+  geom_bar()
+
+```
+
+
+
+**Observation:**
+It's clear from the above plot that people loan term is either a year or 3 years or 5 years. However, most people request loans in the term of 3 years.
+
+
+**The question here:**
+Does the loan term affects the payments of the loan?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot( x = LoanOriginalAmount, data = pf,  binwidth = 1000 )+
+  scale_x_continuous(limits = c(0,40000), breaks = seq(0,40000,2000))+
+  theme(axis.text = element_text(angle = 90,hjust = 0))
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$LoanOriginalAmount)
+
+```
+
+
+
+**Observation:**
+From the above plot and the summary table, it's clear that most people request loans in the range of $1000 and $35,000. Loans that starting from $30,000 can be considered as an outlier since very few people request them.
+
+As a general summary, people request a loan of average of $8,337. 
+
+
+It can be noticed that the shape is more of a right skewed histogram.And this is understandable since very few people are able to get high loans and repay them.
+
+**The question here:** 
+Do people with a higher loan amount fail to complete the loan payment ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(pf, aes(Occupation)) + 
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ pf%>%
+ dplyr::group_by(Occupation)%>%
+ dplyr::summarize(count= n())%>%
+ dplyr:: arrange(desc(count))%>%
+ head(68)
+
+```
+
+
+
+**Observation:**
+It can be observed from the graph above and the table summary that people with occupations that weren't stated (other), is the largest group that request a loan. The second largest group who request a loan are professionals.The third largest group that request a loan are computer programmers. The fourth group that request a loan are executives. And the fifth group who request a loan are teachers. 
+
+This information can help marketers to focus more on these groups and pay more for appealing advertisments to attract them to get a loan from Prosper Company. 
+
+
+**The question that come here is:** 
+
+Do people from these large groups tend to complete their loans payments on time ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(pf, aes(IncomeRange)) + 
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+
+
+
+**Observation:**
+
+It can be observed clearly the normal distribuation of the the income range for people who request loans.
+
+The largest group of people who request loans have an income range between \$25,000 and $75,000.
+
+It can be also observed that very few people with no income or not employed request loans.
+
+**The question here is:**
+
+Do people with more income range pay or complete their loan payments ?
+
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(subset(pf, !is.na(EmploymentStatus)), aes(EmploymentStatus)) + 
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+
+
+
+**Observation:**
+
+It can be concluded that the most group of people who request loans are employed, and very few who are not employed ( It could be students ) or retired (Many retriers have savings from their previous working years) or have a part time job. 
+
+**The question here is:**
+
+Does the employment status affect the ability of the person to pay the loan payments?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(subset(pf, !is.na( ProsperRating..Alpha.)),
+       aes( ProsperRating..Alpha.)) + 
+  geom_bar()
+
+```
+
+
+
+**Prosper Rating	Estimated Avg. Annual Loss Rate :**
+
+1.AA	0.00-1.99%
+2.A	  2.00-3.99%
+3.B	  4.00-5.99%
+4.C	  6.00-8.99%
+5.D	  9.00-11.99%
+6.E	  12.00-14.99%
+7.HR	>= 15.00%
+
+**Note:** Prosper Ratings allow potential investors to easily consider a loan application's level of risk since each rating represents an estimated average annualized loss rate range to the investor.
+
+**Observation:**
+
+From the bar plot above, most loans application's level of risk is under the B or C categories. And very few who have AA an excellent rating.
+
+**Three questions arise here:**
+
+* Do people with high income range get a good prosper rating for the loans applications ?
+
+
+* Are loans applications with a good prosper rating associated with completed loans payments ?
+
+
+* Are loans applications with a good prosper rating associated with a high lender yield ?
+
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = pf, aes(BorrowerRate*100))+
+  geom_histogram(col = "black", fill = "blue", binwidth = 1)+
+  scale_x_continuous(limits = c(0,50), breaks = seq(0,50,1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$BorrowerRate*100)
+```
+**Observation:**
+
+The minimum borrower rate (intreset rate) is 0% and the maximum borrower rate is 50%, which both can be considered as outliers since very very few people can get them. However, the average intreset rate is 19.28 %.
+
+The histogram appears to have a normal distribuation, bell-shaped. 
+
+**Note:** Loans with zero intreset rate are given in a very special conditions like being a student. 
+
+**Three questions arise here:** 
+
+* Do large amount of loans generate a high intreset rate ?
+
+* Does the purpose of the loan affect the precentage of earned intreset rate ?
+
+* Do loans with high terms have more intreset rate than others ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = pf, aes(LenderYield*100))+
+  geom_histogram(col = "black", fill = "orange",binwidth = 1)+
+  scale_x_continuous(limits = c(0,50) , breaks = seq(0,50,1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$LenderYield*100)
+```
+
+
+
+**Observation:**
+
+The average lender yield is 18.27%.
+
+The histogram appears to have a normal distribuation, bell-shaped. 
+
+
+**Three questions arise here:** 
+
+* Does the purpose of the loan affect the precentage of lender yield ?
+
+* Do loans with high terms have less lender yields than others ?
+
+* Does high intreset rate on the borrower generate a high lender yield or no ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(data = pf, x = StatedMonthlyIncome)+
+  scale_x_continuous(limits = c(0,50000) , breaks = seq(0,50000,2000))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$StatedMonthlyIncome)
+
+```
+
+
+**Observation:**
+
+The average stated monthly income is $5,608. The plot has a right skewed shape with several outliers , which are also clear in the minimum and maximum columns in the summary above. This type of distribuation is due to the fact that few people get a high monthly income. 
+
+
+**Two questions are here:** 
+
+* Do people with low monthly income fail to complete their loan payments and visa versa ?
+
+* Do people with low monthly income get a low prosper rating and visa versa ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = pf, aes( as.factor(ListingCategory..numeric.))) + 
+  geom_bar()
+  
+```
+
+
+
+**The category of the listing that the borrower selected when posting their listing:**
+0 - Not Available.
+1 - Debt Consolidation: it means getting a loan to pay off a number of liabilities and consumer debts,
+2 - Home Improvement.
+3 - Business.
+4 - Personal Loan.
+5 - Student Use.
+6 - Auto.
+7- Other.
+8 - Baby&Adoption.
+9 - Boat.
+10 - Cosmetic Procedure.
+11 - Engagement Ring.
+12 - Green Loans: it is a government initiative designed to encourage individuals to make more energy-saving improvements on their home.
+13 - Household Expenses.
+14 - Large Purchases.
+15 - Medical/Dental.
+16 - Motorcycle.
+17 - RV: it'a loan to buy a recreational vehicle.
+18 - Taxes.
+19 - Vacation.
+20 - Wedding Loans.
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table(pf$ListingCategory..numeric.)
+```
+
+
+**Observation:**
+
+It can be concluded that the three most reasons for people to request loans are:
+1.For debt consolidation, which means to pay their debts and liablities. 
+2.For home improvement.
+3.For Business. 
+
+
+**Three questions arise here:**
+
+* Which loans purposes generate the highest and lowest lender yield for investors?
+
+* What is the average lender yield that can be generated from each category ?
+
+* What is the average loan amount requested under each category ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(data = pf, x = EstimatedReturn*100)+
+   scale_x_continuous(limits = c(0,25), breaks = seq(0,25,1))+
+   theme(axis.text.x = element_text(angle = 90, hjust = 0))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$EstimatedReturn*100)
+
+```
+
+
+**Observation:**
+
+It can be concluded that the estimated return is between 0 and 28.37 %. 
+
+The average estimated return is 9.607%.
+
+It can be also observed that the distribuation of the estimated return is normal.
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = pf, aes(BorrowerState )) + 
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+  
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table(pf$BorrowerState)
+
+```
+**The states abbreviations meaning:**
+
+1. Alabama - AL.
+2. Alaska - AK.
+3. Arizona - AZ.
+4. Arkansas - AR.
+5. California - CA.
+6. Colorado - CO.
+7. Connecticut - CT.
+8. Delaware - DE.
+9. Florida - FL.
+10. Georgia - GA.
+11. Hawaii - HI.
+12. Idaho - ID.
+13. Illinois - IL.
+14. Indiana - IN.
+15. Iowa - IA.
+16. Kansas - KS.
+17. Kentucky - KY.
+18. Louisiana - LA.
+19. Maine - ME.
+20. Maryland - MD.
+21. Massachusetts - MA.
+22. Michigan - MI.
+23. Minnesota - MN.
+24. Mississippi - MS.
+25. Missouri - MO.
+26. Montana - MT.
+27. Nebraska - NE.
+28. Nevada - NV.
+29. New Hampshire - NH.
+30. New Jersey - NJ.
+31. New Mexico - NM.
+32. New York - NY.
+33. North Carolina - NC.
+34. North Dakota - ND.
+35. Ohio - OH.
+36. Oklahoma - OK.
+37. Oregon - OR.
+38. P6ennsylvania - PA.
+39. Rhode Island - RI.
+40. South Carolina - SC.
+41. South Dakota - SD.
+42. Tennessee - TN.
+43. Texas - TX.
+44. Utah - UT.
+45. Vermont - VT.
+46. Virginia - VA.
+47. Washington - WA.
+48. West Virginia - WV.
+49. Wisconsin - WI.
+50. Wyoming - WY.
+
+
+
+**Observation:**
+
+The three states where most borrowers request loans are : California , Texas , and NewYork. 
+
+  
+**The two question here :**
+
+* In Which states where loans are most of the time completed ?
+
+* In which states the estimated return on investment is high ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE }
+
+# creating five ranges for the credit score 
+pf$CreditScoreRangeLower.bucket <- cut(pf$CreditScoreRangeLower,
+                                       c(300, 579, 669, 739, 799, 850),
+                                       labels = c("300-579","580-669","670-739"
+                                                  ,"740-799","800-850"))
+
+ggplot( data = subset(pf,!is.na(CreditScoreRangeLower.bucket)),
+        aes(CreditScoreRangeLower.bucket )) + 
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))
+
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+summary(pf$CreditScoreRangeLower)
+
+```
+
+
+
+**To understand the plot, here is the credit score range categories:**
+
+[ Credit Score - Rating - % of People - Impact]
+
+1. (300-579)- Very Poor -	17% -	Credit applicants may be required to pay a fee or deposit, and applicants with this rating may not be approved for credit at all.
+
+2. 580-669 -	Fair -	20.2% -	Applicants with scores in this range are considered to be subprime borrowers.
+
+3. 670-739 -	Good -	21.5%	- Only 8% of applicants in this score range are likely to become seriously delinquent in the future.
+
+4. 740-799 -	Very Good -	18.2% -	Applicants with scores here are likely to receive better than average rates from lenders.
+
+5. 800-850 -	Exceptional - 19.9% - Applicants with scores in this range are at the top of the list for the best rates from lenders.
+
+**Observation:**
+
+It can be concluded that very few people get a very poor rating or exceptional rating. The average credit rating given is 686 , which is a good score. And the overall distribuation is normal. 
+
+
+**The question here is:**
+ 
+Does the credit score affect the given borrower rate ?
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(data = pf, x = MonthlyLoanPayment)+
+     theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+     scale_x_continuous(limits = c(0,2000), breaks = seq(0,2000,100))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(pf$MonthlyLoanPayment)
+```
+
+
+**Observation:**
+
+It can be observed that the distribuation of the monthly loan payment is a right skewed shape. And this is understandable since very few people can pay a large monthly loan payment.
+
+The average monthly loan payment is $272.5 per month. 
+
+
+------
+
+
+# Univariate Analysis
+
+
+## What is the structure of your dataset?
+
+In the prosper data set there are 113,937 listings for people who requested loans. In addition, there are 81 
+
+varibales or attributes. The data analyst focused only on 15 of them. And they are:
+
+1. Loan Status.
+2. Lender Yield.
+3. Borrower Rate.
+4. Estimated Return.
+5. Prosper Rating (Alpha).
+6. Listing Category.
+7. Borrower State.
+8. Occupation.
+9. Income Range.
+10. Stated Monthly Income.
+11. Loan Original Amount.
+12. Term.
+14. Employment Status.
+15. Monthly Loan Payment. 
+
+
+The selected variables are of type int, factor, and number. 
+
+
+#### The int variables are: 
+
+1. Term.
+2. Listing Category.
+3. Loan Original Amount.
+4. Credit Score Range Lower.
+
+
+#### The number variables are:
+
+1. Borrower Rate.
+2. Lender Yield.
+3. Estimated Return.
+4. Stated Monthly Income.
+5. Monthly Loan Payment. 
+
+
+
+####The ordered factors are:
+
+*  Prosper Rating (Alpha): Estimated Avg. Annual Loss Rate
+
+1. AA	0.00-1.99%
+2. A	  2.00-3.99%
+3. B	  4.00-5.99%
+4. C	  6.00-8.99%
+5. D	  9.00-11.99%
+6. E	  12.00-14.99%
+7. HR	>= 15.00%
+
+
+#### Other factors:
+
+* Listing Category:
+
+0. Not Available.
+1. Debt Consolidation: it means getting a loan to pay off a number of liabilities and consumer debts,
+2. Home Improvement.
+3. Business.
+4. Personal Loan.
+5. Student Use.
+6. Auto.
+7. Other.
+8. Baby&Adoption.
+9. Boat.
+10. Cosmetic Procedure.
+11. Engagement Ring.
+12. Green Loans: it is a government initiative designed to encourage individuals to make more energy-saving improvements on their home.
+13. Household Expenses.
+14. Large Purchases.
+15. Medical/Dental.
+16. Motorcycle.
+17. RV: it'a loan to buy a recreational vehicle.
+18. Taxes.
+19. Vacation.
+20. Wedding Loans.
+
+
+* Loan Status:
+
+1. Cancelled.
+2. Chargedoff.
+3. Completed.
+4. Current.
+5. Defaulted.
+6. Final Payment in Progress.
+7. Past Due ( and other loan status).
+
+
+* Borrower State:
+
+1. Alabama - AL.
+2. Alaska - AK.
+3. Arizona - AZ.
+4. Arkansas - AR.
+5. California - CA.
+6. Colorado - CO.
+7. Connecticut - CT.
+8. Delaware - DE.
+9. Florida - FL.
+10. Georgia - GA.
+11. Hawaii - HI.
+12. Idaho - ID.
+13. Illinois - IL.
+14. Indiana - IN.
+15. Iowa - IA.
+16. Kansas - KS.
+17. Kentucky - KY.
+18. Louisiana - LA.
+19. Maine - ME.
+20. Maryland - MD.
+21. Massachusetts - MA.
+22. Michigan - MI.
+23. Minnesota - MN.
+24. Mississippi - MS.
+25. Missouri - MO.
+26. Montana - MT.
+27. Nebraska - NE.
+28. Nevada - NV.
+29. New Hampshire - NH.
+30. New Jersey - NJ.
+31. New Mexico - NM.
+32. New York - NY.
+33. North Carolina - NC.
+34. North Dakota - ND.
+35. Ohio - OH.
+36. Oklahoma - OK.
+37. Oregon - OR.
+38. P6ennsylvania - PA.
+39. Rhode Island - RI.
+40. South Carolina - SC.
+41. South Dakota - SD.
+42. Tennessee - TN.
+43. Texas - TX.
+44. Utah - UT.
+45. Vermont - VT.
+46. Virginia - VA.
+47. Washington - WA.
+48. West Virginia - WV.
+49. Wisconsin - WI.
+50. Wyoming - WY.
+
+
+* Employment Status:
+
+1. Employed,
+2. Full-time.
+3. Not Available.
+4. Not Employed.
+5. Other.
+6. Part-time.
+7. Retired.
+8. Self Employed. 
+
+
+* Income Range:
+
+1. $0.
+2. $1-$24,999.
+3. $25,000-$49,999.
+4. $50,000-$74,999.
+5. $75,000-$99,999.
+6. $100,000.
+7. Not displayed.
+8. Not employed.
+
+
+* Credit score Range:
+
+
+[ Credit Score - Rating - % of People - Impact]
+
+1. (300-579)- Very Poor -	17% -	Credit applicants may be required to pay a fee or deposit, and applicants with this rating may not be approved for credit at all.
+
+2. 580-669 -	Fair -	20.2% -	Applicants with scores in this range are considered to be subprime borrowers.
+
+3. 670-739 -	Good -	21.5%	- Only 8% of applicants in this score range are likely to become seriously delinquent in the future.
+
+4. 740-799 -	Very Good -	18.2% -	Applicants with scores here are likely to receive better than average rates from lenders.
+
+5. 800-850 -	Exceptional - 19.9% - Applicants with scores in this range are at the top of the list for the best rates from lenders.
+
+
+* Occupation.
+
+
+### What is/are the main feature(s) of interest in your dataset?
+
+The analysis for the prosper data set can help both the investor and the borrower. The investor is always 
+looking to invest in loans that generate a high return and that are likely to be repayed as soon as possible , and the borrower is always looking to get loans with the lowest intreset rate. Therefore, studying the selected variables will help both the investor and the borrower to take better decisons regarding loans, so the main features of intreset are the lender yield, and the borrower rate. 
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest? 
+
+After doing some research, I think that the credit score, loan amount, loan term and monthly loan payment affect the borrower given rate. Furthermore, I think that the loan amount, purpose of the loan, the prosper rating, and the borrower rate affect the expected precentage of lender yield.  
+
+
+### Did you create any new variables from existing variables in the dataset?
+
+Yes, I created a new varibale for the credit score range since it displays discrete values which are hard to get insights from. The new varibale includes 5 seprate ranges. 
+
+### Of the features you investigated, were there any unusual distributions? 
+### Did you perform any operations on the data to tidy, adjust, or change the form \of the data? If so, why did you do this?
+
+Generally, the distribuations of the variables I explored are normalized such as income range, borrower rate, lender yield, estimated return, and etc. However, the loan original amount, monthly loan payment and the stated monthly income have right skewed distribuations.For these varibales, I will increase the transparency because the bulk of data will be in left side of the plot.
+
+
+------
+
+
+# Bivariate Plots Section
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot( subset(pf, !is.na(CreditScoreRangeLower.bucket)),
+        aes(x = CreditScoreRangeLower.bucket,
+            y = BorrowerRate*100, color = CreditScoreRangeLower.bucket )) +
+  geom_point(alpha = 0.05)+
+  scale_y_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  theme(axis.text.y = element_text(angle = 90, hjust = 0))+
+  scale_color_brewer(palette = "Set1",
+  guide = guide_legend(title = 'Credit Score Range', reverse = TRUE,
+  override.aes = list(alpha = 1, size = 2)))+
+  labs(x = "Credit Score Range" , y ="Borrower Rate")+
+  ggtitle("Credit Score Range VS. Borrower Rate")
+
+```
+
+
+
+**To understand the credit score ranges:**
+
+
+[ Credit Score - Rating - % of People - Impact]
+
+1. (300-579)- Very Poor -	17% -	Credit applicants may be required to pay a fee or deposit, and applicants with this rating may not be approved for credit at all.
+
+2. 580-669 -	Fair -	20.2% -	Applicants with scores in this range are considered to be subprime borrowers.
+
+3. 670-739 -	Good -	21.5%	- Only 8% of applicants in this score range are likely to become seriously delinquent in the future.
+
+4. 740-799 -	Very Good -	18.2% -	Applicants with scores here are likely to receive better than average rates from lenders.
+
+5. 800-850 -	Exceptional - 19.9% - Applicants with scores in this range are at the top of the list for the best rates from lenders.
+
+
+**Observation:**
+
+
+The above scatter plot shows a negative relationship between the credit score and the borrower rate.
+
+The plot shows that most of the bulk data in exceptional credit score range are given a lower borrower rate than others. And the bulk of data with very poor or fair credit range scores are given a higher borrower rate than others. 
+
+This makes sense since the risk of not repaying the loan is very low with this credit score category. As high risk is always assoicated with a high borrower rate.
+
+To check this relationships with more numric emphasizes, I will compute the correlation coefficient.
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+with(subset(pf, CreditScoreRangeLower >= 300), 
+     cor.test(CreditScoreRangeLower, BorrowerRate), method = 'pearson')
+```
+
+
+**Observation:**
+
+The correlation coefficient is nearly -0.5 ;it is a moderate negative relationship between the credit score range and the borrower rate. This result is consistent with the drawen scatter plot above.
+
+
+Next, I want to check the average borrower rate under each credit score range. 
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+by(pf$BorrowerRate*100, pf$CreditScoreRangeLower.bucket, summary)
+```
+
+
+
+
+**Conclusion:** It's obivious that the average and the median borrower rate is decreasing with the best credit score ranges. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( subset(pf,!is.na(CreditScoreRangeLower.bucket)),
+        aes(x = CreditScoreRangeLower.bucket,
+            y = BorrowerRate*100, color = CreditScoreRangeLower.bucket )) +
+  geom_boxplot()+
+  scale_y_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  theme(axis.text.y = element_text(angle = 90, hjust = 0))+
+  scale_color_brewer(palette = "Set1",
+  guide = guide_legend(title = 'Credit Score Range', reverse = TRUE,
+  override.aes = list(alpha = 1, size = 2)))+
+  labs(x = "Credit Score Range", y ="Borrower Rate")+
+  ggtitle("Credit Score Range VS. Borrower Rate")
+
+```
+
+
+**Observation:**
+
+The above box plot is clearly represents the negative relationship between the credit score range and the borrower rate. When the score is in a high credit score range, the borrower rate is low. And when the score is in a low credit score range, the borrower rate is high. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(aes(x = LoanOriginalAmount, y = BorrowerRate*100),
+        data = pf)+
+  geom_jitter(alpha = 1/20)+
+  scale_y_continuous(limits = c(0,40), breaks = seq(0,40,5))+
+  scale_x_continuous(limits = c(0,40000), breaks = seq(0,40000,2000))+
+  geom_smooth(method ="lm", color = "red")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+  labs(x = "Loan Original Amount in $", y ="Borrower Rate")+
+  ggtitle("Loan Original Amount VS. Borrower Rate")
+
+```
+
+
+
+**Observation:**
+
+It can be observed that there is a negative relationship between the loan original amount and the borrower rate. This conclusion is the opposite with the fact that large loan amounts are associated with high borrower rate since there is more risk to repay the large loan amount than small ones. It can be also observed that the bulk of data is under $10,000. Furthermore, the loan amounts are shown more in discrete values such as $1000, $2500, $2700, etc since loan money values is normally shown in this format. 
+
+
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(pf$LoanOriginalAmount, pf$BorrowerRate , method = "pearson") 
+```
+
+
+
+**Observation:**
+
+The correlation coefficient is nearly -0.3;it is a week negative relationship between the loan original amount and the borrower rate. This result is consistent with the drawen scatter plot above. 
+
+Conclusion: This un expected relationship it might be due to other factors that have a stronger impact on the borrower rate. In the next sections, I will study the effect of loan term with the loan amount on the borrower rate to have a clearer picture of this relationship. 
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+
+  ggplot(aes(x = as.factor(Term/12),
+             y = BorrowerRate*100), data = pf) +
+  geom_boxplot()+
+  scale_y_continuous(limits = c(0,50),
+                     breaks = seq(0,50,5))+
+  labs(x = "Loan Term in Years", y ="Borrower Rate")+
+  ggtitle("Loan Term VS. Borrower Rate")
+
+```
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+by(pf$BorrowerRate, pf$Term/12, summary)
+```
+
+
+
+**Observation:**
+
+It can be observed from the above boxplot that with longer loan terms, a higher borrower rate is imposed on the borrower. This observation is consistent with the fact that with longer loan term, there is a higher risk that the borrower will not be able to repay the full amount of loan. However, the difference in the borrower rate from 3 years term to 5 years term is not huge. 
+
+
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = MonthlyLoanPayment, y = BorrowerRate*100),
+        data = pf)+
+  geom_jitter(alpha = 1/20)+
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,50,5))+
+  scale_x_continuous(limits = c(0,2500), breaks = seq(0,2500,100))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+  geom_smooth(method = "lm", color = "red")+
+  labs(x = "Monthly Loan Payment in $", y ="Borrower Rate")+
+  ggtitle("Monthly Loan Payment VS. Borrower Rate")
+```
+
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(pf$MonthlyLoanPayment, pf$BorrowerRate , method = "pearson") 
+```
+
+
+**Observation:**
+
+It can be observed from the scatter plot that the relationship between the monthly loan payment and the borrower rate is nearly -0.3, which is a weak negative linear relationship. With larger monthly payment, the lower the borrower rate will be. Monthly loan payments which are more than $1000 are starting to get the a low borrower rate. Lastly, the bulk of data is mostly under$800. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+   
+  # The loan status of "current" is removed because
+  # the comparison is between the completed and not completed loans
+
+  ggplot( data = subset(pf,!is.na(ProsperRating..Alpha.) & LoanStatus!="Current"),
+          aes(ProsperRating..Alpha.))+
+    geom_bar(aes(fill = LoanStatus), position = "fill")+
+    theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+    labs(x = "Prosper Rating", y = "Precentage %")+
+    ggtitle("Prosper Rating VS. Loan Status")
+```
+
+
+**Prosper Rating	Estimated Avg. Annual Loss Rate :**
+
+1. AA	0.00-1.99%
+2. A	  2.00-3.99%
+3. B	  4.00-5.99%
+4. C	  6.00-8.99%
+5. D	  9.00-11.99%
+6. E	  12.00-14.99%
+7. HR	>= 15.00%
+
+**Observation:**
+
+It can be observed that with riskier prosper ratings, the less likely that the loan will be repaid fully. And with less riskier prosper ratings, the more likely that the loan will be repaid.
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = subset(pf, LoanStatus!="Current"), aes(LoanOriginalAmount))+ 
+  geom_histogram(col = "black", aes(fill = LoanStatus, binwidth = 1000),
+                 position = "fill")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+  scale_x_continuous(limits = c(0,40000), breaks = seq(0,40000,2000))+
+  labs(x = "Loan original Amount in $", y ="Precentage % of Borrowers")+
+  ggtitle("Loan Original Amount VS. Loan Status")
+      
+```
+
+
+**Observation:**
+
+It can be observed that there is no relationship or clear pattern between the loan amount and the loan completion. However, there are more completed loans than non-completed ones in general. 
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = LoanOriginalAmount, y = LenderYield * 100),
+        data = pf)+
+  geom_point(alpha = 1/20, color = "blue4")+
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,50,5))+
+  scale_x_continuous(limits = c(1000,40000), breaks = seq(1000,40000,2000))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+  geom_smooth(method="lm", color = "red")+
+  labs(x = "Loan Original Amount in $", y ="Lender Yield")+
+  ggtitle("Loan Original Amount VS. Lender Yield")
+
+```
+
+
+**Observation:**
+
+The relationship between the lender yield and the loan original amount is seems to be a negative relationship but not perfect. Loans amounts more than $25,000 seem to have a less lender yield than others. 
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+cor.test(pf$LenderYield, pf$LoanOriginalAmount , method = "pearson") 
+
+```
+
+
+
+**Observation:**
+
+The correlation coefficient is nearly -0.3;it is a week negative relationship between the loan original amount and the lender yield. With larger loan amounts, the less the lender yield will be. This result is consistent with the drawen scatter plot above. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = pf, aes( x = as.factor(ListingCategory..numeric.),
+                        y = LenderYield*100)) + 
+  geom_boxplot()+
+  labs(x = "Listing Category", y = "Lender Yield")+
+  ggtitle("Listing Category VS. Lender Yield")
+  
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+by(pf$LenderYield*100,pf$ListingCategory..numeric.,summary)
+```
+
+
+
+####To explain the graph results, check each listing category purpose that corspond to each number :
+
+1. Debt Consolidation: it means getting a loan to pay off a number of liabilities and consumer debts,
+2. Home Improvement.
+3. Business.
+4. Personal Loan.
+5. Student Use.
+6. Auto.
+7. Other.
+8. Baby&Adoption.
+9. Boat.
+10. Cosmetic Procedure.
+11. Engagement Ring.
+12. Green Loans: it is a government initiative designed to encourage individuals to make more energy-saving improvements on their home.
+13. Household Expenses.
+14. Large Purchases.
+15. Medical/Dental.
+16. Motorcycle.
+17. RV: it'a loan to buy a recreational vehicle.
+18. Taxes.
+19. Vacation.
+20. Wedding Loans.
+
+**Conclusion:** It can be observed generally that the mean lender yield is above 10% for all the listing categories.
+
+**The tope listing categories that generate the highest lender yield are:**
+
+1. Cosmetic Procedure with average lender yield  of %21.59.
+2. Household Expenses with average lender yield of %21.38.
+3. Medical/Dental with average lender of %19.91.
+4. Vacation with average lender yield of %19.75.
+5. RV: loan to buy a recreational vehicle with average lender yield of %19.73. 
+
+**Note:** the listing category (7) = Other was excluded since the purpose is not known here.
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot( subset(pf,!is.na(ProsperRating..Alpha.)),
+        aes(x = ProsperRating..Alpha.,
+            y = LenderYield*100 )) +
+  geom_boxplot()+
+  scale_y_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  theme(axis.text.y = element_text(angle = 90, hjust = 0))+
+  labs(x = "Prosper Rating", y ="Lender Yield")+
+  ggtitle("Prosper Rating VS. Lender Yield")
+
+```
+
+
+**Prosper Rating	Estimated Avg. Annual Loss Rate :**
+
+1. AA	0.00-1.99%
+2. A	  2.00-3.99%
+3. B	  4.00-5.99%
+4. C	  6.00-8.99%
+5. D	  9.00-11.99%
+6. E	  12.00-14.99%
+7. HR	>= 15.00%
+
+**Observation:**
+
+It can be observed that with more riskier propser rating, the more the lender yield is. This conclusion is consistent with the fact that with more risk, there is more return. 
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+by(pf$LenderYield*100, pf$ProsperRating..Alpha.,summary)
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = BorrowerRate*100, y = LenderYield * 100),
+        data = pf)+
+  geom_line()+
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,50,5))+
+  scale_x_continuous(limits = c(0,50), breaks = seq(0,50,5))+
+  geom_smooth(method="lm", color = "red")+
+  labs(x = "Borrower Rate", y ="Lender Yield")+
+  ggtitle("Borrower Rate VS. Lender Yield")
+```
+
+
+**Observation:**
+
+It can be observed that there is a positive relationship between the lender yield and the borrower rate. 
+
+As the borrower rate increases, the lender yield also increases. In addition, it can be observed that the bulk of data is under 30% for lender yield and borrower rate. 
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cor.test(pf$LenderYield, pf$BorrowerRate , method = "pearson") 
+```
+
+------
+
+# Bivariate Analysis
+
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+The first relationship studied was between the credit score and the borrower rate; the relationship was a moderate negative relationship. This relationship is consistent with the fact that people with exceptional scores are less risker in term of repaying the full amount of loan on time. As a result, with best credit scores, the less the borrower rate will be.
+
+The second relationship studied was between the loan original amount and the borrower rate, which was a weak negative relationship. I was expecting a stronger relationship since large loans hold more risk in repaying them. 
+
+The third relationship studied was between the loan term and the borrower rate; the relationship was weak negative relationship. So, with longer loan term, the higher the imposed borrower rate on the borrower. This relationship is consistent with the fact that with longer loan term, the higher the risk that the borrower will not be able to repay the full loan amount. However, the difference in the borrower rate from 3 years term to 5 years term was not huge.
+
+
+The fourth relationship studied was between the prosper rating and the loan completion.I observed that with riskier prosper ratings, the less likely that the loan will be repaid fully. And with less riskier prosper ratings, the more likely that the loan will be repaid. 
+
+
+The fifth relationship studied was between the monthly loan payment and the borrower rate. This relationship turned to be a negative weak relationship. With larger monthly loan payment, the lower the borrower rate. However, this is not always true as there are large monthly loan payments with a high borrower rate.
+
+Next, I studied the relationship between the loan amount and the completion of the loan. I found that there is no relationship or clear pattern between the loan amount and the loan completion. This conclusion is oppsite with the fact that with larger loan amounts, there is a risk that the loan might not be repaid. 
+
+The seventh relationship studied was between the lender yield and the loan original amount; the relationship was a weak negative relationship. With larger loan amounts, the less the lender yield will be.
+
+Next, I studied the relationship between the listing categories and the lender yield and found that:
+
+The tope listing categories that generate the highest lender yield are:
+
+1. Cosmetic Procedure with average lender yield of %21.59.
+2. Household Expenses with average lender yield of %21.38.
+3. Medical/Dental with average lender of %19.91.
+4. Vacation with average lender yield of %19.75.
+5. RV: loan to buy a recreational vehicle with average lender yield of %19.73.
+
+The ninth relationship was studied between the prosper rating and the lender yield. I found that with more riskier ratings, the more the lender yield is. This result is consistent with the fact that with more risk, there is a higher return. 
+
+The final relationship studied was between the lender yield and the borrower rate; the relationship was a nearly strong perfect relationship. As the borrower rate increases, the lender yield increases also. However, there were some outliers, and this is understandable since the deducted bank fee plays a role here. 
+
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+I was intrested to study the prosper rating and the loan original amount effect on the completion of the loan. 
+I found that the risker the prosper ratings, the less likely that the loan will be repaid. In addtion, I found that there is no clear relationhsip between the loan amount and the loan completion. 
+
+
+### What was the strongest relationship you found?
+
+The strongest relationship that was found was between the lender yield and the borrowe rate. As the borrower rate increases, the lender yield increases also and visa versa. The relationship was a perfect strong positive relationship. 
+
+------
+
+
+# Multivariate Plots Section
+
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( subset(pf, !is.na(CreditScoreRangeLower.bucket)),
+        aes(x = BorrowerRate*100,
+            y = LenderYield*100)) +
+  geom_point(aes(color = CreditScoreRangeLower.bucket))+
+  scale_y_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  scale_x_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  scale_color_brewer(palette = "Set1",
+  guide = guide_legend(title = 'Credit Score Range', reverse = TRUE,
+  override.aes = list(alpha = 1, size = 2)))+
+  labs(x = "Borrower Rate" , y ="Lender Yield")+
+  ggtitle("Borrower Rate Vs. Lender Yield Vs. Credit Score Range")
+
+```
+
+
+
+**Observation:**
+
+I wanted to confirm my findings from the previous section. It is clear how strong the relationship between the borrower rate and the lender yield. With riskier credit score ranges, there is a high borrower rate since there is a high risk that the borrower might not repay the loan amount.Thus, with this high risk, there is a higer lender yield for the lender. This conclusion is shown on the scatter plot as execptional, good, and very good credit scores are drawn in the bottom, and the fair and poor credit scores are drawn on the top. 
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = LoanOriginalAmount, y = LenderYield*100),
+        data = subset(pf,!is.na(ProsperRating..Alpha.)))+
+  geom_point(alpha = 1/20, aes(color = ProsperRating..Alpha.))+
+  scale_color_brewer(palette = "Dark2",
+                     guide = guide_legend(title = 'Prosper Rating',
+                     reverse = TRUE,
+                     override.aes = list(alpha = 1, size = 2)))+
+  scale_y_continuous(limits = c(0,50), breaks = seq(0,50,5))+
+  scale_x_continuous(limits = c(1000,40000), breaks = seq(1000,40000,2000))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+  labs(x = "Loan Original Amount in $", y ="Lender Yield")+
+  ggtitle("Loan Original Amount VS. Lender Yield vs. Prosper Rating")
+```
+
+
+
+**Observation:**
+
+It can be observed that the prosper rating is not associated with the loan amount as discovered in a previous plot. However, as the lender yield is increasing, the worse the prosper rating is. 
+
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ 
+ggplot(aes(x = ProsperRating..Alpha., y = LoanOriginalAmount),
+        data = subset(pf, !is.na(ProsperRating..Alpha.) &
+                        IncomeRange != "$0" & IncomeRange != "Not employed"))+
+  geom_boxplot()+
+  facet_wrap(~IncomeRange, ncol = 5)+
+  scale_y_continuous(limits = c(1000,25000), breaks = seq(1000,25000,2000))+
+  labs(x = "Prosper Rating Score", y ="Loan Original Amount in $")+
+  ggtitle("Loan Original Amount Vs. Prosper Rating Score Vs. Income Range")
+
+
+```
+
+
+**Observation:**
+
+It can be observed that with increasing income range, the loan amount is increasing also. The second observation is that it's not usual for people with low income range to take large loans. And it's not usual also for people with high income range to take small loans. I noticed also that the worst prosper ratings are not usually associated with large amount of loans. 
+
+------
+
+
+# Multivariate Analysis
+
+
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+
+I was intrested to know what might affect the lender yield and the borrower rate since they have a strong relationship together. I found that the riskier the credit score is, the higher the lender yield and the borrower rate. Also, I was intrested to know what might affect the completion of the loan, and I found that 
+there is no clear relationship between the income range and the loan completion. Finally, I wanted to know the relationship between prosper rating score, income range, and the loan original amount. And I found that with increasing income range, the loan amount is increasing also. I found also that it's not usual for people with low income range to take large loans. And it's not usual also for people with high income range to take small loans. Finally, I noticed also that the worst prosper ratings are not usually associated with large amount of loans.  
+
+
+### Were there any interesting or surprising interactions between features?
+
+Yes, I found that the riskier the credit score is, the higher the lender yield and the borrower rate. This means with high risk, there is a high cost for the borrower and a high return for the investor.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, message=FALSE, warning=FALSE }
+ggplot( subset(pf, !is.na(CreditScoreRangeLower.bucket)),
+        aes(x = CreditScoreRangeLower.bucket,
+            y = BorrowerRate*100, color = CreditScoreRangeLower.bucket )) +
+  geom_point(alpha = 0.05, position = position_jitter(h = 0))+
+  scale_y_continuous(limits = c(0,40),
+                     breaks = seq(0,40,5))+
+  theme(axis.text.y = element_text(angle = 90, hjust = 0))+
+  scale_color_brewer(palette = "Set1",
+  guide = guide_legend(title = 'Credit Score Range', reverse = TRUE,
+  override.aes = list(alpha = 1, size = 2)))+
+  labs(x = "Credit Score Range" , y ="Borrower Rate %")+
+  ggtitle("Credit Score Range VS. Borrower Rate")
+```
+
+### Description One
+
+**To understand the credit score ranges:**
+
+
+[ Credit Score - Rating - % of People - Impact]
+
+1. (300-579)- Very Poor -	17% -	Credit applicants may be required to pay a fee or deposit, and applicants with this rating may not be approved for credit at all.
+
+2. 580-669 -	Fair -	20.2% -	Applicants with scores in this range are considered to be subprime borrowers.
+
+3. 670-739 -	Good -	21.5%	- Only 8% of applicants in this score range are likely to become seriously delinquent in the future.
+
+4. 740-799 -	Very Good -	18.2% -	Applicants with scores here are likely to receive better than average rates from lenders.
+
+5. 800-850 -	Exceptional - 19.9% - Applicants with scores in this range are at the top of the list for the best rates from lenders.
+
+
+**Observation:**
+
+
+The improved scatter plot above shows more clearly the negative relationship between the credit score and the borrower rate. As the credit score is becoming higher, the borrower rate is getting lower. This observation  is consistent with the fact that if there is a higher level of perceived credit risk, investors and lenders usually demand a higher rate of interest for their capital.
+
+
+
+### Plot Two
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ # I decided to make data more simple by making two groups of loans:
+ # completed and not completed loans ( wether it was past the due
+ # date of payment or no longer is expected to be repaid )
+
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Chargedoff" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Defaulted" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (1-15 days)" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (16-30 days)" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (61-90 days)" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (31-60 days)" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (91-120 days)" = "Not completed"))
+ pf$LoanStatus <- revalue(pf$LoanStatus, c("Past Due (>120 days)" = "Not completed"))
+
+
+  ggplot( data = subset(pf,!is.na(ProsperRating..Alpha.) &
+                          LoanStatus!="Current" &
+                          LoanStatus!="FinalPaymentInProgress"),
+          aes(ProsperRating..Alpha.))+
+    geom_bar(aes(fill = LoanStatus), position = "fill")+
+    theme(axis.text.x = element_text(angle = 90, hjust = 0))+
+    labs(x = "Prosper Rating", y = "Precentage %")+
+    ggtitle("Prosper Rating VS. Loan Status")
+```
+
+
+
+### Description Two
+
+This imrpoved bar graph shows more clearly the relationship between the prosper rating score and the completion of the loan.  With riskier prosper ratings, the less likely that the loan will be repaid fully. And with less riskier prosper ratings, the more likely that the loan will be repaid. It is clear from this relationship that the level of risk affect the completion of the loan. The less risker prosper rate score that have more probability to get comepleted loans is AA. 
+
+
+### Plot Three
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+# fixing the income range order
+
+pf$IncomeRange <- factor(pf$IncomeRange, levels=c("$1-24,999", "$25,000-49,999"
+                                                  ,"$50,000-74,999", 
+                                                  "$75,000-99,999","$100,000+"))
+
+ggplot(aes(x = ProsperRating..Alpha., y = LoanOriginalAmount),
+        data = subset(pf, !is.na(ProsperRating..Alpha.) &
+                        IncomeRange != "$0" & IncomeRange != "Not employed"))+
+  geom_boxplot()+
+  facet_wrap(~IncomeRange, ncol = 3)+
+  scale_y_continuous(limits = c(1000,25000), breaks = seq(1000,25000,2000))+
+  stat_summary(fun.y=median, geom="smooth", aes(group=1))+
+  labs(x = "Prosper Rating Score", y ="Loan Original Amount in $")+
+  ggtitle("Loan Original Amount Vs. Prosper Rating Score Vs. Income Range")
+```
+
+
+
+### Description Three
+
+
+It can be observed that with increasing income range, the loan amount is increasing also. The second observation is that it's not usual for people with low income range to take large loans. And it's not usual also for people with high income range to take small loans. This makes sense since people with limited income will not usually put themselves in a risk of not repaying the large loans. And people with high income range will feel confident enough to take large amount of loans. I noticed also that the worst prosper ratings scores are not usually associated with large amount of loans. The final notice here is that the median loan original amount is decreasing while the prosper rating score is getting worse.
+
+
+------
+
+# Reflection
+
+The main difficulty in this project is the large number of variables to explore in the provided data set. 
+It took me some time to read and explore these variables and decide which ones will be useful to get 
+some insights out of them.   
+
+However, with all difficulties, I succeeded in confirming my knowledge and readings with the results I got.  Especially, the relationship with risk vs. borrower rate and lender yield.  My findings confirmed that with more risk, the higher cost will be for the borrower and the higher return the lender will get. 
+
+I believe that there many more interesting variables to explore that will definitely help to improve the analysis such as the year trends, number of recommendations given for the borrower, the service fee paid by the investor and many more.  Also, the questions drawn at the beginning of the analysis can help to do more exploration work in the future. Finally, I believe a predictive model can be build to predict the lender yield or the borrower rate or the probability of completing the loan payments.
